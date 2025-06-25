@@ -1,48 +1,57 @@
 ﻿var builder = WebApplication.CreateBuilder();
+
+builder.Services.AddScoped<ICounter, Counter>();
+builder.Services.AddScoped<CounterService>();
+
 var app = builder.Build();
 
-app.UseToken(); // ← используем наше middleware
-
-app.Run(async context =>
-{
-    await context.Response.WriteAsync("Hello METANIT.COM");
-});
+app.UseMiddleware<CounterMiddleware>();
 
 app.Run();
 
-
-
-// ========== MIDDLEWARE ==========
-public class TokenMiddleware
+public interface ICounter
 {
-    private readonly RequestDelegate _next;
+    int Value { get; }
+}
 
-    public TokenMiddleware(RequestDelegate next)
+public class Counter : ICounter
+{
+    static Random rnd = new Random();
+    private int _value;
+    public Counter()
     {
-        _next = next;
+        _value = rnd.Next(0, 1000000);
     }
-
-    public async Task InvokeAsync(HttpContext context)
+    public int Value
     {
-        var token = context.Request.Query["token"];
+        get => _value;
+    }
+}
 
-        if (token != "12345678")
-        {
-            context.Response.StatusCode = 403;
-            await context.Response.WriteAsync("Token is invalid");
-            return; // ❗ важно: выходим, не вызывая next
-        }
-
-        await _next(context); // ✅ продолжаем pipeline
+public class CounterService
+{
+    public ICounter Counter { get; }
+    public CounterService(ICounter counter)
+    {
+        Counter = counter;
     }
 }
 
 
-// ========== РАСШИРЕНИЕ ==========
-public static class TokenExtensions
+public class CounterMiddleware
 {
-    public static IApplicationBuilder UseToken(this IApplicationBuilder builder)
+    RequestDelegate next;
+
+    int i = 0;
+    public CounterMiddleware(RequestDelegate next)
     {
-        return builder.UseMiddleware<TokenMiddleware>();
+        this.next = next;
+    }
+
+    public async Task InvokeAsync(HttpContext httpContext, ICounter counter, CounterService counterService)
+    {
+        i++;
+        httpContext.Response.ContentType = "text/html;charset=utf-8";
+        await httpContext.Response.WriteAsync($"Запрос {i}; Counter: {counter.Value}; Service: {counterService.Counter.Value}");
     }
 }
