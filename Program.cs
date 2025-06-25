@@ -1,57 +1,46 @@
 ﻿var builder = WebApplication.CreateBuilder();
 
-builder.Services.AddScoped<ICounter, Counter>();
-builder.Services.AddScoped<CounterService>();
+builder.Services.AddScoped<ITimer, Timer>();
+builder.Services.AddTransient<TimeService>();
 
 var app = builder.Build();
 
-app.UseMiddleware<CounterMiddleware>();
+app.UseMiddleware<TimerMiddleware>();
 
 app.Run();
 
-public interface ICounter
+public interface ITimer
 {
-    int Value { get; }
+    string Time { get; }
+}
+public class Timer : ITimer
+{
+    public Timer()
+    {
+        Time = DateTime.Now.ToLongTimeString();
+    }
+    public string Time { get; }
+}
+public class TimeService
+{
+    private ITimer timer;
+    public TimeService(ITimer timer)
+    {
+        this.timer = timer;
+    }
+    public string GetTime() => timer.Time;
 }
 
-public class Counter : ICounter
+public class TimerMiddleware
 {
-    static Random rnd = new Random();
-    private int _value;
-    public Counter()
+    TimeService timeService;
+    public TimerMiddleware(RequestDelegate next, TimeService timeService)
     {
-        _value = rnd.Next(0, 1000000);
-    }
-    public int Value
-    {
-        get => _value;
-    }
-}
-
-public class CounterService
-{
-    public ICounter Counter { get; }
-    public CounterService(ICounter counter)
-    {
-        Counter = counter;
-    }
-}
-
-
-public class CounterMiddleware
-{
-    RequestDelegate next;
-
-    int i = 0;
-    public CounterMiddleware(RequestDelegate next)
-    {
-        this.next = next;
+        this.timeService = timeService;
     }
 
-    public async Task InvokeAsync(HttpContext httpContext, ICounter counter, CounterService counterService)
+    public async Task Invoke(HttpContext context)
     {
-        i++;
-        httpContext.Response.ContentType = "text/html;charset=utf-8";
-        await httpContext.Response.WriteAsync($"Запрос {i}; Counter: {counter.Value}; Service: {counterService.Counter.Value}");
+        await context.Response.WriteAsync($"Time: {timeService?.GetTime()}");
     }
 }
