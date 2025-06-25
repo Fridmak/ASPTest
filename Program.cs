@@ -1,46 +1,43 @@
 ﻿var builder = WebApplication.CreateBuilder();
-
-builder.Services.AddScoped<ITimer, Timer>();
-builder.Services.AddTransient<TimeService>();
+builder.Services.AddTransient<IHelloService, RuHelloService>();
+builder.Services.AddTransient<IHelloService, EnHelloService>();
 
 var app = builder.Build();
 
-app.UseMiddleware<TimerMiddleware>();
+app.UseMiddleware<HelloMiddleware>();
 
 app.Run();
 
-public interface ITimer
+
+interface IHelloService
 {
-    string Time { get; }
-}
-public class Timer : ITimer
-{
-    public Timer()
-    {
-        Time = DateTime.Now.ToLongTimeString();
-    }
-    public string Time { get; }
-}
-public class TimeService
-{
-    private ITimer timer;
-    public TimeService(ITimer timer)
-    {
-        this.timer = timer;
-    }
-    public string GetTime() => timer.Time;
+    string Message { get; }
 }
 
-public class TimerMiddleware
+class RuHelloService : IHelloService
 {
-    TimeService timeService;
-    public TimerMiddleware(RequestDelegate next, TimeService timeService)
+    public string Message => "Привет METANIT.COM";
+}
+class EnHelloService : IHelloService
+{
+    public string Message => "Hello METANIT.COM";
+}
+
+class HelloMiddleware
+{
+    readonly IHelloService helloService;
+
+    public HelloMiddleware(RequestDelegate _, IHelloService helloServices)
     {
-        this.timeService = timeService;
+        this.helloService = helloServices;
     }
 
-    public async Task Invoke(HttpContext context)
+    public async Task InvokeAsync(HttpContext context)
     {
-        await context.Response.WriteAsync($"Time: {timeService?.GetTime()}");
+        context.Response.ContentType = "text/html; charset=utf-8";
+        string responseText = "";
+        responseText += $"<h3>{helloService.Message}</h3>";
+       
+        await context.Response.WriteAsync(responseText);
     }
 }
