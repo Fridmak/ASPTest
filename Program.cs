@@ -1,11 +1,17 @@
 ﻿var builder = WebApplication.CreateBuilder();
+
 var app = builder.Build();
 
-app.Map("/", () => "Index Page");
-app.Map("/about", () => "About Page");
-app.Map("/contact", () => "Contacts Page");
+app.MapGet("/sex", ([AsParameters] Person person) => $"You would like to fuck {person.name} who is {person.age} y.o.");
+app.MapGet("/", () => "main");
 
-app.MapGet("/routes", (IEnumerable<EndpointDataSource> endpointSources) =>
-        string.Join("\n", endpointSources.SelectMany(source => source.Endpoints)));
+app.Use(async (context, next) => { await next(); await context.Response.WriteAsync("added"); });
+app.UseStaticFiles();
 
 app.Run();
+
+public class Person
+{
+    public string name { get; set; }
+    public int age { get; set; }
+}
