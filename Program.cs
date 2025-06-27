@@ -1,34 +1,24 @@
-﻿using Microsoft.Extensions.FileProviders;
+﻿using Microsoft.AspNetCore.Builder;
 
 var builder = WebApplication.CreateBuilder();
-
 var app = builder.Build();
 
-var options = new DefaultFilesOptions();
-options.DefaultFileNames.Clear();
-options.DefaultFileNames.Add("index.html");
-app.UseDefaultFiles(options);
-app.UseStaticFiles();
-app.UseStaticFiles(new StaticFileOptions()
+app.Map("/test", testApp =>
 {
-    FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), @"wwwroot/html")),
-
-    RequestPath = new PathString("/pages")
+    testApp.Use(async (context, next) =>
+    {
+        Console.WriteLine("→ In middleware branch '/test'");
+        context.Response.ContentType = "text/plain; charset=utf-8";
+        await context.Response.WriteAsync("Middleware branch: /test");
+        await next();
+        Console.WriteLine("← In middleware branch '/test'");
+    });
 });
 
-app.UseDirectoryBrowser(new DirectoryBrowserOptions()
+app.Map("/test", () =>
 {
-    FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), @"wwwroot")),
-
-    RequestPath = new PathString("/pages")
+    Console.WriteLine("🎯 Minimal route '/test' is executing");
+    return "Minimal route: /test";
 });
-
-app.MapGet("/sex", ([AsParameters] Person person) => $"You would like to fuck {person.name} who is {person.age} y.o.");
 
 app.Run();
-
-public class Person
-{
-    public string name { get; set; }
-    public int age { get; set; }
-}
