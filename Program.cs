@@ -1,8 +1,10 @@
-﻿var builder = WebApplication.CreateBuilder();
+﻿using EMPTYASP;
+
+var builder = WebApplication.CreateBuilder();
 var app = builder.Build();
 
-builder.Configuration.AddJsonFile("settings.json");
+builder.Configuration.AddTextFile("sources.txt");
 
-app.Map("/", (IConfiguration appConfig) => $"{appConfig["person"]} - {appConfig["age"]}");
+app.Map("/", (IConfiguration appConfig) => $"{appConfig["name"]} - {appConfig["age"]}");
 
 app.Run();
