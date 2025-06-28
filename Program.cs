@@ -1,9 +1,8 @@
-﻿using Microsoft.AspNetCore.Builder;
-
-var builder = WebApplication.CreateBuilder();
+﻿var builder = WebApplication.CreateBuilder();
 var app = builder.Build();
 
-app.Configuration["sekas"] = "no";
+builder.Configuration.AddJsonFile("settings.json");
 
-app.Map("/", (IConfiguration appConfig) => $"{appConfig["sekas"]} - {appConfig["age"]}");
+app.Map("/", (IConfiguration appConfig) => $"{appConfig["person"]} - {appConfig["age"]}");
+
 app.Run();
