@@ -7,6 +7,14 @@ builder.Services.Configure<Person>(builder.Configuration);
 var app = builder.Build();
 
 app.UseMiddleware<PersonMiddleware>();
+
+app.Run(async (context) =>
+{
+    app.Logger.LogInformation($"Processing request {context.Request.Path}");
+
+    await context.Response.WriteAsync("Hello World!");
+});
+
 app.Run();
 public class PersonMiddleware
 {
@@ -25,6 +33,8 @@ public class PersonMiddleware
         stringBuilder.Append("</ul>");
 
         await context.Response.WriteAsync(stringBuilder.ToString());
+
+        await _next(context);
     }
 }
 public class Person
