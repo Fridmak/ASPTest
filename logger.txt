@@ -1,0 +1,7 @@
+Now listening on: https://localhost:7182
+Now listening on: http://localhost:5133
+Application started. Press Ctrl+C to shut down.
+Hosting environment: Development
+Content root path: C:\Users\apbat\source\repos\EMPTYASP
+Path: /  Time:9:02:53
+Path: /hi  Time:9:02:58
